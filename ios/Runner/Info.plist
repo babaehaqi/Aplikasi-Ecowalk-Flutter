@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>EcoWalk menggunakan kamera untuk mengambil foto profil jika Anda memilihnya.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>EcoWalk mengakses galeri untuk memilih foto profil yang Anda pilih.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

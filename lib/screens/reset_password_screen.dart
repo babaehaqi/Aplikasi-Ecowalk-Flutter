@@ -31,7 +31,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (_changePassFormKey.currentState?.validate() ?? false) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Kata sandi berhasil diubah!'),
+          content: Text(
+            'Validasi simulasi selesai. Kata sandi belum disimpan oleh layanan.',
+          ),
           backgroundColor: _primaryGreen,
         ),
       );
@@ -153,10 +155,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         children: [
           ClipPath(
             clipper: _ChangePassClipper(),
-            child: Container(
-              height: 220,
-              color: _lightHeaderBg,
-            ),
+            child: Container(height: 220, color: _lightHeaderBg),
           ),
           Positioned(
             top: 75,
@@ -244,10 +243,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           ),
           onPressed: onToggleVisibility,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
         ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: _primaryGreen, width: 1.8),

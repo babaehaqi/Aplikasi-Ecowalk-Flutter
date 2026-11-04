@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:tugas_1_copy/models/ecowalk_profile.dart';
+import 'package:tugas_1_copy/widgets/ecowalk_bottom_nav.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   static const Color _primaryThemeColor = Color(0xFF1A6556);
 
   @override
@@ -56,21 +63,24 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const CircleAvatar(
-                  backgroundImage: AssetImage('lib/assets/images/profile.jpg'),
+                child: CircleAvatar(
+                  backgroundImage: EcowalkProfile.instance.photoBytes != null
+                      ? MemoryImage(EcowalkProfile.instance.photoBytes!)
+                      : const AssetImage('lib/assets/images/profile.png'),
+                  onBackgroundImageError: (_, _) {},
                 ),
               ),
             ),
           ),
 
           // Display Name
-          const Positioned(
+          Positioned(
             top: 162,
             left: 0,
             right: 0,
             child: Center(
               child: Text(
-                'KAYI NYAP NYAP',
+                EcowalkProfile.instance.name,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -96,8 +106,8 @@ class ProfileScreen extends StatelessWidget {
                   color: _primaryThemeColor,
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: const Text(
-                  'kayimail@gmail.com',
+                child: Text(
+                  EcowalkProfile.instance.email,
                   style: TextStyle(
                     fontSize: 11.5,
                     color: Colors.white,
@@ -117,38 +127,37 @@ class ProfileScreen extends StatelessWidget {
       _ProfileItemData(
         icon: Icons.settings_outlined,
         title: 'Pengaturan',
-        onTap: () {},
+        onTap: () =>
+            Navigator.pushNamed(context, '/account_settings').then((_) {
+              if (mounted) setState(() {});
+            }),
       ),
       _ProfileItemData(
         icon: Icons.edit_outlined,
         title: 'Edit Profil',
-        onTap: () {},
+        onTap: () => Navigator.pushNamed(context, '/edit_profile').then((_) {
+          if (mounted) setState(() {});
+        }),
       ),
       _ProfileItemData(
         icon: Icons.lock_outline,
         title: 'Kebijakan Privasi',
-        onTap: () {},
+        onTap: () => Navigator.pushNamed(context, '/privacy'),
       ),
       _ProfileItemData(
         icon: Icons.info_outline,
         title: 'Tentang Kami',
-        onTap: () {},
+        onTap: () => Navigator.pushNamed(context, '/about'),
       ),
       _ProfileItemData(
         icon: Icons.description_outlined,
         title: 'Ketentuan Layanan',
-        onTap: () {},
+        onTap: () => Navigator.pushNamed(context, '/terms'),
       ),
       _ProfileItemData(
         icon: Icons.logout,
         title: 'Keluar',
-        onTap: () {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/login',
-            (route) => false,
-          );
-        },
+        onTap: () => _confirmLogout(context),
       ),
     ];
 
@@ -185,76 +194,87 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNav(BuildContext context) {
-    return SizedBox(
-      height: 65,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Base bar
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              height: 60,
-              color: _primaryThemeColor,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
-                  Icon(Icons.home_outlined, color: Colors.white, size: 24),
-                  Icon(
-                    Icons.verified_user_outlined,
-                    color: Colors.white,
-                    size: 24,
+  Future<void> _confirmLogout(BuildContext context) async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Keluar?',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 7),
+              const Text(
+                'Apakah Kamu Yakin Ingin Keluar?',
+                style: TextStyle(fontSize: 13, color: Colors.black87),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  FilledButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    style: FilledButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: _primaryThemeColor,
+                      minimumSize: const Size(88, 32),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                    child: const Text('Batal'),
                   ),
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    color: Colors.white,
-                    size: 24,
+                  const SizedBox(width: 12),
+                  OutlinedButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _primaryThemeColor,
+                      minimumSize: const Size(88, 32),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      side: const BorderSide(
+                        color: _primaryThemeColor,
+                        width: 1.5,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                    child: const Text('Keluar'),
                   ),
-                  SizedBox(width: 55), // Offset for floating account action
                 ],
               ),
-            ),
+            ],
           ),
-
-          // Floating Account Indicator
-          Positioned(
-            right: 22,
-            bottom: 24,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 62,
-                  height: 62,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: _primaryThemeColor, width: 8),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: _primaryThemeColor,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                const Text(
-                  'AKUN',
-                  style: TextStyle(
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
+    );
+
+    if (shouldLogout == true && context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
+  }
+
+  Widget _buildBottomNav(BuildContext context) {
+    return EcoWalkBottomNav(
+      selectedIndex: 3,
+      onTap: (index) {
+        if (index == 0) {
+          Navigator.pushReplacementNamed(context, '/home');
+        } else if (index == 1) {
+          Navigator.pushReplacementNamed(context, '/recommendations');
+        } else if (index == 2) {
+          Navigator.pushReplacementNamed(context, '/community');
+        }
+      },
     );
   }
 }

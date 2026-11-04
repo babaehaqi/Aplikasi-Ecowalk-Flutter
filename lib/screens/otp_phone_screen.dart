@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:tugas_1_copy/models/ecowalk_profile.dart';
 
 class PhoneOtpScreen extends StatefulWidget {
-  const PhoneOtpScreen({super.key});
+  const PhoneOtpScreen({
+    super.key,
+    this.destination,
+    this.isContactUpdate = false,
+  });
+
+  final String? destination;
+  final bool isContactUpdate;
 
   @override
   State<PhoneOtpScreen> createState() => _PhoneOtpScreenState();
@@ -12,8 +20,10 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
   static const Color _primaryTheme = Color(0xFF1A6556);
   static const Color _headerBg = Color(0xFFDCE9E8);
 
-  final List<TextEditingController> _otpControllers =
-      List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _otpControllers = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
 
   @override
@@ -27,12 +37,36 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
     super.dispose();
   }
 
-  void _submitOtp() {
+  Future<void> _submitOtp() async {
     final code = _otpControllers.map((c) => c.text).join();
     if (code.length == 4) {
+      if (widget.isContactUpdate && widget.destination != null) {
+        EcowalkProfile.instance.phone = widget.destination!;
+        try {
+          await EcowalkProfile.instance.save();
+        } catch (_) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Nomor baru gagal disimpan pada perangkat ini.'),
+            ),
+          );
+          return;
+        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Nomor diperbarui lokal; verifikasi masih simulasi.'),
+          ),
+        );
+        Navigator.pop(context, true);
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Kode OTP berhasil diverifikasi!'),
+          content: Text(
+            'Simulasi OTP selesai. Kode belum diverifikasi oleh layanan server.',
+          ),
           backgroundColor: _primaryTheme,
         ),
       );
@@ -57,14 +91,21 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
             children: [
               _buildTopHeader(),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Badge Verifikasi
                     Row(
                       children: const [
-                        Icon(Icons.check_circle_outline, size: 20, color: _primaryTheme),
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 20,
+                          color: _primaryTheme,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           'VERIFIKASI',
@@ -82,17 +123,24 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
                     // Keterangan nomor telepon
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Icon(Icons.phone_android, size: 28, color: Colors.black87),
+                      children: [
+                        Icon(
+                          Icons.phone_android,
+                          size: 28,
+                          color: Colors.black87,
+                        ),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text.rich(
                             TextSpan(
-                              text: 'Periksa dan ketik kode verifikasi yang telah dikirimkan ke ',
-                              style: TextStyle(fontSize: 13.5, color: Colors.black87),
+                              text: 'Kode simulasi (belum dikirim layanan) untuk ',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: Colors.black87,
+                              ),
                               children: [
                                 TextSpan(
-                                  text: '+629593599593',
+                                  text: widget.destination ?? '+629593599593',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black,
@@ -109,28 +157,41 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
                     // Kotak OTP 4 Digit
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: List.generate(4, (index) => _buildOtpField(index)),
-                    ),
-                    const SizedBox(height: 28),
-
-                    // Opsi verifikasi alternatif
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacementNamed(context, '/verificationWithEmail');
-                        },
-                        child: const Text(
-                          'Verifikasi menggunakan Email',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            color: Colors.cyan,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                      children: List.generate(
+                        4,
+                        (index) => _buildOtpField(index),
                       ),
                     ),
                     const SizedBox(height: 28),
+
+                    // Opsi alternatif tersedia pada alur registrasi.
+                    if (!widget.isContactUpdate)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/verificationWithEmail',
+                              arguments: widget.isContactUpdate
+                                  ? {
+                                      'purpose': 'change_email',
+                                      'target': widget.destination,
+                                    }
+                                  : null,
+                            );
+                          },
+                          child: const Text(
+                            'Verifikasi menggunakan Email',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              color: Colors.cyan,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (!widget.isContactUpdate) const SizedBox(height: 28),
 
                     // Tombol Kirim
                     SizedBox(
@@ -162,8 +223,10 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
                       child: InkWell(
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Kode verifikasi baru telah dikirimkan ulang'),
+                            SnackBar(
+                              content: Text(
+                                'Layanan kirim ulang OTP belum terhubung.',
+                              ),
                               backgroundColor: _primaryTheme,
                             ),
                           );
@@ -198,18 +261,13 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
         children: [
           ClipPath(
             clipper: _PhoneOtpHeaderClipper(),
-            child: Container(
-              height: 220,
-              color: _headerBg,
-            ),
+            child: Container(height: 220, color: _headerBg),
           ),
           Positioned(
             top: 90,
             left: 0,
             right: 0,
-            child: Center(
-              child: _buildBrandedLogo(),
-            ),
+            child: Center(child: _buildBrandedLogo()),
           ),
         ],
       ),

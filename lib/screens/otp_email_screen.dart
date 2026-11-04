@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:tugas_1_copy/models/ecowalk_profile.dart';
 
 class EmailOtpScreen extends StatefulWidget {
-  const EmailOtpScreen({super.key});
+  const EmailOtpScreen({
+    super.key,
+    this.destination,
+    this.isContactUpdate = false,
+  });
+
+  final String? destination;
+  final bool isContactUpdate;
 
   @override
   State<EmailOtpScreen> createState() => _EmailOtpScreenState();
@@ -12,8 +20,10 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
   static const Color _brandTeal = Color(0xFF1A6556);
   static const Color _topBackground = Color(0xFFDCE9E8);
 
-  final List<TextEditingController> _codeControllers =
-      List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _codeControllers = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _digitFocusNodes = List.generate(4, (_) => FocusNode());
 
   @override
@@ -27,12 +37,36 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
     super.dispose();
   }
 
-  void _onConfirmOtp() {
+  Future<void> _onConfirmOtp() async {
     final otp = _codeControllers.map((c) => c.text).join();
     if (otp.length == 4) {
+      if (widget.isContactUpdate && widget.destination != null) {
+        EcowalkProfile.instance.email = widget.destination!;
+        try {
+          await EcowalkProfile.instance.save();
+        } catch (_) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Email baru gagal disimpan pada perangkat ini.'),
+            ),
+          );
+          return;
+        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email diperbarui lokal; verifikasi masih simulasi.'),
+          ),
+        );
+        Navigator.pop(context, true);
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Verifikasi email berhasil!'),
+          content: Text(
+            'Simulasi OTP selesai. Kode belum diverifikasi oleh layanan server.',
+          ),
           backgroundColor: _brandTeal,
         ),
       );
@@ -57,14 +91,21 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
             children: [
               _buildCurvedHeader(),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Status Tag
                     Row(
                       children: const [
-                        Icon(Icons.check_circle_outline, size: 20, color: _brandTeal),
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 20,
+                          color: _brandTeal,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           'VERIFIKASI',
@@ -82,17 +123,24 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
                     // Information section
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Icon(Icons.mark_email_read_outlined, size: 28, color: Colors.black87),
+                      children: [
+                        Icon(
+                          Icons.mark_email_read_outlined,
+                          size: 28,
+                          color: Colors.black87,
+                        ),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text.rich(
                             TextSpan(
-                              text: 'Periksa dan ketik kode verifikasi yang telah dikirimkan ke ',
-                              style: TextStyle(fontSize: 13.5, color: Colors.black87),
+                              text: 'Kode simulasi (belum dikirim layanan) untuk ',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: Colors.black87,
+                              ),
                               children: [
                                 TextSpan(
-                                  text: 'test@gmail.com',
+                                  text: widget.destination ?? 'test@gmail.com',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black,
@@ -113,24 +161,34 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
                     ),
                     const SizedBox(height: 28),
 
-                    // Switch to Phone verification
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacementNamed(context, '/verificationWithNoHP');
-                        },
-                        child: const Text(
-                          'Verifikasi menggunakan No. HP',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            color: Colors.cyan,
-                            fontWeight: FontWeight.w600,
+                    // Opsi alternatif tersedia pada alur registrasi.
+                    if (!widget.isContactUpdate)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/verificationWithNoHP',
+                              arguments: widget.isContactUpdate
+                                  ? {
+                                      'purpose': 'change_phone',
+                                      'target': widget.destination,
+                                    }
+                                  : null,
+                            );
+                          },
+                          child: const Text(
+                            'Verifikasi menggunakan No. HP',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              color: Colors.cyan,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 28),
+                    if (!widget.isContactUpdate) const SizedBox(height: 28),
 
                     // Submit Button
                     SizedBox(
@@ -162,8 +220,10 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
                       child: InkWell(
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Kode OTP email baru berhasil dikirim'),
+                            SnackBar(
+                              content: Text(
+                                'Layanan kirim ulang OTP belum terhubung.',
+                              ),
                               backgroundColor: _brandTeal,
                             ),
                           );
@@ -198,18 +258,13 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
         children: [
           ClipPath(
             clipper: _EmailOtpHeaderClipper(),
-            child: Container(
-              height: 220,
-              color: _topBackground,
-            ),
+            child: Container(height: 220, color: _topBackground),
           ),
           Positioned(
             top: 90,
             left: 0,
             right: 0,
-            child: Center(
-              child: _buildHeaderLogo(),
-            ),
+            child: Center(child: _buildHeaderLogo()),
           ),
         ],
       ),

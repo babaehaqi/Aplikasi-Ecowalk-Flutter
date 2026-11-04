@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -39,9 +38,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final String username = _usernameCtrl.text.trim();
     final String password = _passwordCtrl.text;
 
-    if (username == _validUsername &&
-        password == _validPassword) {
-      Navigator.pushNamed(context, '/profile');
+    if (username == _validUsername && password == _validPassword) {
+      Navigator.pushNamed(context, '/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -213,13 +211,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Pemisah
                   Row(
                     children: [
-                      const Expanded(
-                        child: Divider(thickness: 0.6),
-                      ),
+                      const Expanded(child: Divider(thickness: 0.6)),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'Atau',
                           style: TextStyle(
@@ -228,9 +222,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-                      const Expanded(
-                        child: Divider(thickness: 0.6),
-                      ),
+                      const Expanded(child: Divider(thickness: 0.6)),
                     ],
                   ),
 
@@ -243,9 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: OutlinedButton.styleFrom(
                         backgroundColor: const Color(0xFFF7F7F7),
                         foregroundColor: Colors.black87,
-                        side: BorderSide(
-                          color: Colors.grey.shade300,
-                        ),
+                        side: BorderSide(color: Colors.grey.shade300),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
@@ -281,10 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const Text(
                         'Tidak punya akun? ',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.black87,
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.black87),
                       ),
                       GestureDetector(
                         onTap: () {
